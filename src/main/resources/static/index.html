@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Movie Ticket Booking</title>
+<style>
+  :root {
+    --bg:#0b0d14; --panel:#141826; --panel2:#1b2133; --line:#262d45;
+    --text:#e9ecf5; --muted:#8b93a7; --accent:#ff4d5a; --gold:#ffc857; --green:#34d399;
+    --seat:#5a6a92; --seat-dark:#44527a; --arm:#37425f; --s:36px;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; min-height:100vh; color:var(--text);
+    font-family:system-ui,"Segoe UI",Arial,sans-serif;
+    background:radial-gradient(1200px 500px at 50% -120px,#2c2050 0%,transparent 70%),var(--bg);
+  }
+  .hidden { display:none !important; }
+
+  .top { padding:16px 24px; border-bottom:1px solid var(--line); }
+  .brand { font-size:1.2rem; font-weight:700; letter-spacing:.02em; }
+  .brand span { background:linear-gradient(90deg,var(--accent),var(--gold)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero { text-align:center; padding:36px 20px 8px; }
+  .hero h1 { margin:0 0 8px; font-size:clamp(1.6rem,4vw,2.4rem); }
+  .hero p { margin:0; color:var(--muted); }
+
+  main { max-width:960px; margin:0 auto; padding:20px; }
+  h2 { margin:28px 0 14px; font-size:1.05rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
+
+  button { font:inherit; cursor:pointer; border:0; }
+  .btn { background:linear-gradient(135deg,var(--accent),#ff7a45); color:#fff; padding:10px 18px; border-radius:10px; font-weight:600; transition:transform .12s, box-shadow .2s; }
+  .btn:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 6px 18px rgba(255,77,90,.35); }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .btn.danger { background:linear-gradient(135deg,#c62828,#ef5350); }
+  .btn.ghost, .ghost { background:transparent; color:var(--muted); border:1px solid var(--line); padding:8px 14px; border-radius:10px; }
+  .ghost:hover { color:var(--text); border-color:var(--muted); }
+  input { background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit; min-width:0; }
+  input:focus { outline:2px solid var(--accent); outline-offset:1px; border-color:transparent; }
+
+  .shows { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:16px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden; animation:rise .45s ease both; transition:transform .2s, box-shadow .2s; }
+  .card:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,.45); }
+  .poster { height:130px; position:relative; display:flex; align-items:flex-end; padding:12px 14px; }
+  .poster .initial { position:absolute; right:12px; top:-10px; font-size:6.5rem; font-weight:800; color:rgba(255,255,255,.2); line-height:1; }
+  .poster .tag { background:rgba(0,0,0,.4); padding:3px 10px; border-radius:20px; font-size:.75rem; backdrop-filter:blur(4px); }
+  .info { padding:14px 16px 16px; }
+  .info .name { font-size:1.15rem; font-weight:700; margin-bottom:4px; }
+  .info .meta { color:var(--muted); font-size:.85rem; line-height:1.6; margin-bottom:14px; }
+  .info .foot { display:flex; justify-content:space-between; align-items:center; }
+  .price { color:var(--gold); font-weight:700; }
+
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; margin-top:24px; animation:rise .4s ease both; }
+  .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .p-title { font-size:1.3rem; font-weight:700; }
+  .p-meta { color:var(--muted); font-size:.9rem; margin-top:4px; }
+
+  .hall { margin-top:22px; overflow-x:auto; padding-bottom:6px; }
+  .hall-inner { min-width:max-content; margin:0 auto; width:fit-content; }
+  .screen {
+    height:54px; margin:0 auto; width:86%;
+    border-top:5px solid #dfe6ff; border-radius:50% 50% 0 0 / 100% 100% 0 0;
+    background:linear-gradient(rgba(190,205,255,.35),transparent);
+    box-shadow:0 -16px 46px rgba(140,165,255,.5);
+  }
+  .screen-label { text-align:center; font-size:.7rem; letter-spacing:.35em; color:var(--muted); margin-top:8px; }
+  .beam { height:46px; width:86%; margin:2px auto 14px; background:linear-gradient(rgba(170,190,255,.16),transparent); clip-path:polygon(6% 0,94% 0,100% 100%,0 100%); }
+
+  .grid { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .row { display:flex; align-items:center; gap:10px; }
+  .rlabel { width:18px; text-align:center; color:var(--muted); font-size:.75rem; font-weight:600; }
+  .aisle { width:26px; }
+
+  .seat {
+    position:relative; width:var(--s); height:calc(var(--s) - 2px); padding:0;
+    background:linear-gradient(var(--seat),var(--seat-dark));
+    border-radius:10px 10px 6px 6px; color:#e6ebfa; font-size:.65rem; font-weight:600;
+    box-shadow:inset 0 -8px 0 rgba(0,0,0,.22);
+    transition:transform .12s, background .2s, box-shadow .2s;
+  }
+  .seat::before, .seat::after { content:""; position:absolute; bottom:3px; width:5px; height:55%; background:var(--arm); border-radius:3px; }
+  .seat::before { left:-5px; }
+  .seat::after { right:-5px; }
+  .seat:hover:not(:disabled) { transform:translateY(-3px); box-shadow:inset 0 -8px 0 rgba(0,0,0,.22), 0 6px 14px rgba(120,150,255,.4); }
+  .seat.selected { background:linear-gradient(#fbbf24,#f59e0b); color:#2a1d00; box-shadow:inset 0 -8px 0 rgba(0,0,0,.18), 0 0 16px rgba(251,191,36,.6); }
+  .seat.selected::before, .seat.selected::after { background:#b97a0a; }
+  .seat.booked { background:linear-gradient(#3a3f52,#2c3042); color:#5d647a; cursor:not-allowed; box-shadow:inset 0 -8px 0 rgba(0,0,0,.3); }
+  .seat.booked::before, .seat.booked::after { background:#242838; }
+
+  .legend { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; margin-top:20px; font-size:.8rem; color:var(--muted); }
+  .legend i { display:inline-block; width:14px; height:12px; border-radius:4px 4px 2px 2px; margin-right:6px; vertical-align:-1px; }
+
+  .bar {
+    position:sticky; bottom:0; display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+    background:rgba(20,24,38,.94); backdrop-filter:blur(8px); border-top:1px solid var(--line);
+    padding:14px 20px; margin:20px -20px -20px; border-radius:0 0 16px 16px; z-index:5;
+  }
+  .bar-info { flex:1 1 200px; min-width:0; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; min-height:26px; align-items:center; color:var(--muted); font-size:.9rem; }
+  .chip { background:rgba(251,191,36,.15); color:var(--gold); border:1px solid rgba(251,191,36,.4); padding:2px 10px; border-radius:20px; font-size:.8rem; font-weight:600; }
+  .total { font-weight:700; margin-top:4px; }
+  .bar-actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+  .msg { padding:12px 14px; border-radius:10px; margin-top:14px; }
+  .msg.ok { background:rgba(52,211,153,.12); color:#6ee7b7; border:1px solid rgba(52,211,153,.35); }
+  .msg.err { background:rgba(255,77,90,.12); color:#ff9aa2; border:1px solid rgba(255,77,90,.35); }
+
+  .ticket { display:flex; flex-wrap:wrap; margin-top:18px; border-radius:16px; overflow:hidden; background:linear-gradient(135deg,#1f2a44,#2f2150); border:1px solid #3a4468; animation:rise .45s ease both; }
+  .t-main { flex:2 1 260px; padding:20px 22px; }
+  .t-stub { flex:1 1 210px; padding:20px 22px; border-left:2px dashed #55608c; text-align:center; }
+  .t-label { font-size:.68rem; letter-spacing:.25em; color:var(--muted); }
+  .t-title { font-size:1.4rem; font-weight:800; margin:6px 0 10px; }
+  .t-row { color:#cfd6ea; margin-bottom:4px; font-size:.92rem; }
+  .code { font-family:Consolas,"Courier New",monospace; font-size:1.55rem; font-weight:800; letter-spacing:.12em; margin:10px 0 12px; color:var(--gold); }
+  .tip { margin-top:12px; font-size:.8rem; color:var(--muted); line-height:1.5; }
+
+  .steps { margin:0 0 4px; padding:0; list-style:none; display:grid; gap:8px; color:var(--muted); font-size:.92rem; }
+  .steps li { display:flex; gap:10px; align-items:flex-start; }
+  .steps b { flex:none; width:22px; height:22px; border-radius:50%; background:var(--panel2); border:1px solid var(--line); color:var(--text); display:grid; place-items:center; font-size:.75rem; }
+  .form { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  .form input { flex:1 1 180px; }
+  .found { margin-top:16px; padding:16px; border:1px dashed #475079; border-radius:12px; background:var(--panel2); }
+  .found div { margin-bottom:5px; }
+  .found .btn { margin-top:10px; }
+
+  @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  @media (max-width:560px) { :root { --s:28px; } .row { gap:6px; } .aisle { width:16px; } .panel { padding:14px; } .bar { margin:18px -14px -14px; padding:12px 14px; } }
+  @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="brand">🎬 <span>Movie Ticket Booking</span></div></header>
+
+<section class="hero">
+  <h1>Your seat is waiting.</h1>
+  <p>Pick a show, choose your seats, and get your ticket in seconds.</p>
+</section>
+
+<main>
+  <h2>Now showing</h2>
+  <div id="shows" class="shows"></div>
+
+  <section id="booking" class="panel hidden">
+    <div class="panel-head">
+      <div>
+        <div id="showTitle" class="p-title"></div>
+        <div id="showMeta" class="p-meta"></div>
+      </div>
+      <button id="closeBtn" class="ghost">✕ Close</button>
+    </div>
+
+    <div class="hall">
+      <div class="hall-inner">
+        <div class="screen"></div>
+        <div class="screen-label">SCREEN</div>
+        <div class="beam"></div>
+        <div id="seats" class="grid"></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i style="background:var(--seat)"></i>Available</span>
+      <span><i style="background:#fbbf24"></i>Selected</span>
+      <span><i style="background:#3a3f52"></i>Booked</span>
+    </div>
+
+    <div id="msg"></div>
+
+    <div class="bar">
+      <div class="bar-info">
+        <div id="chips" class="chips">No seats selected</div>
+        <div id="total" class="total"></div>
+      </div>
+      <div class="bar-actions">
+        <input id="name" placeholder="Your name">
+        <button id="bookBtn" class="btn" disabled>Book tickets</button>
+      </div>
+    </div>
+  </section>
+
+  <h2>Manage or cancel a booking</h2>
+  <div class="panel" style="margin-top:0">
+    <ul class="steps">
+      <li><b>1</b><span>Enter the booking code from your ticket (for example MTB-7K4Q9X) and the name you booked with.</span></li>
+      <li><b>2</b><span>Click “Find booking” to check the details.</span></li>
+      <li><b>3</b><span>Click “Cancel this booking” and confirm. Your seats are released right away. Bookings can be cancelled until the show starts.</span></li>
+    </ul>
+    <div class="form">
+      <input id="codeIn" placeholder="Booking code" maxlength="12">
+      <input id="nameIn" placeholder="Name used for booking">
+      <button id="findBtn" class="btn">Find booking</button>
+    </div>
+    <div id="found" class="found hidden">
+      <div id="foundInfo"></div>
+      <button id="cancelBtn" class="btn danger">Cancel this booking</button>
+    </div>
+    <div id="manageMsg"></div>
+  </div>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let currentShow = null;
+  let selected = new Set();
+  let foundBooking = null;
+
+  const palettes = [['#ff512f','#dd2476'], ['#4568dc','#b06ab3'], ['#11998e','#38b26d'], ['#f7971e','#e8590c'], ['#00a6fb','#0052cc']];
+  const fmt = d => new Date(d).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function setMsg(target, text, ok) {
+    target.textContent = '';
+    target.className = text ? 'msg ' + (ok ? 'ok' : 'err') : '';
+    target.textContent = text;
+  }
+
+  async function readJson(res) {
+    try { return await res.json(); } catch (e) { return {}; }
+  }
+
+  async function loadShows() {
+    const shows = await (await fetch('/api/shows')).json();
+    const box = $('shows');
+    box.textContent = '';
+    shows.forEach((s, i) => {
+      const [c1, c2] = palettes[s.movie.id % palettes.length];
+      const card = el('div', 'card');
+      card.style.animationDelay = (i * 80) + 'ms';
+
+      const poster = el('div', 'poster');
+      poster.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+      poster.append(el('span', 'initial', s.movie.title.charAt(0)), el('span', 'tag', s.movie.genre));
+
+      const info = el('div', 'info');
+      info.append(
+        el('div', 'name', s.movie.title),
+        el('div', 'meta', `${s.movie.language} · ${s.movie.durationMinutes} min\n${s.screenName} · ${fmt(s.showTime)}`)
+      );
+      info.querySelector('.meta').style.whiteSpace = 'pre-line';
+
+      const foot = el('div', 'foot');
+      const btn = el('button', 'btn', 'Select seats');
+      btn.onclick = () => openShow(s);
+      foot.append(el('span', 'price', `Rs.${s.price}`), btn);
+      info.append(foot);
+
+      card.append(poster, info);
+      box.append(card);
+    });
+  }
+
+  async function openShow(show) {
+    currentShow = show;
+    selected.clear();
+    $('msg').textContent = '';
+    $('msg').className = '';
+    $('showTitle').textContent = show.movie.title;
+    $('showMeta').textContent = `${show.screenName} · ${fmt(show.showTime)} · Rs.${show.price} per seat`;
+    $('booking').classList.remove('hidden');
+    await loadSeats();
+    $('booking').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function loadSeats() {
+    const seats = await (await fetch(`/api/shows/${currentShow.id}/seats`)).json();
+    const grid = $('seats');
+    grid.textContent = '';
+    const rows = {};
+    seats.forEach(s => (rows[s.row] = rows[s.row] || []).push(s));
+
+    Object.keys(rows).forEach(r => {
+      const rowDiv = el('div', 'row');
+      const list = rows[r];
+      const mid = Math.floor(list.length / 2);
+      rowDiv.append(el('span', 'rlabel', r));
+      list.forEach((s, i) => {
+        if (i === mid) rowDiv.append(el('span', 'aisle'));
+        const b = el('button', 'seat' + (s.booked ? ' booked' : '') + (selected.has(s.seat) ? ' selected' : ''), String(s.number));
+        b.disabled = s.booked;
+        b.title = s.seat + (s.booked ? ' (booked)' : '');
+        b.setAttribute('aria-label', 'Seat ' + s.seat + (s.booked ? ', booked' : ''));
+        b.onclick = () => toggleSeat(s.seat, b);
+        rowDiv.append(b);
+      });
+      rowDiv.append(el('span', 'rlabel', r));
+      grid.append(rowDiv);
+    });
+    updateSummary();
+  }
+
+  function toggleSeat(code, btn) {
+    if (selected.has(code)) { selected.delete(code); btn.classList.remove('selected'); }
+    else { selected.add(code); btn.classList.add('selected'); }
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const n = selected.size;
+    const chips = $('chips');
+    chips.textContent = '';
+    if (n === 0) {
+      chips.textContent = 'No seats selected';
+      $('total').textContent = '';
+    } else {
+      [...selected].sort().forEach(c => chips.append(el('span', 'chip', c)));
+      $('total').textContent = `${n} ticket${n > 1 ? 's' : ''} · Rs.${(n * currentShow.price).toFixed(2)}`;
+    }
+    $('bookBtn').disabled = n === 0;
+  }
+
+  function showConfirmation(d) {
+    const box = $('msg');
+    box.textContent = '';
+    box.className = '';
+
+    const ticket = el('div', 'ticket');
+    const main = el('div', 't-main');
+    main.append(
+      el('div', 't-label', 'BOOKING CONFIRMED'),
+      el('div', 't-title', d.movieTitle),
+      el('div', 't-row', `${d.screenName} · ${fmt(d.showTime)}`),
+      el('div', 't-row', `Seats: ${d.seats.join(', ')}`),
+      el('div', 't-row', `Total: Rs.${d.totalAmount}`),
+      el('div', 't-row', `Booked by ${d.customerName}`)
+    );
+
+    const stub = el('div', 't-stub');
+    const copy = el('button', 'btn', 'Copy code');
+    copy.onclick = async () => {
+      try { await navigator.clipboard.writeText(d.bookingCode); copy.textContent = 'Copied!'; }
+      catch (e) { copy.textContent = 'Please copy it manually'; }
+    };
+    stub.append(
+      el('div', 't-label', 'BOOKING CODE'),
+      el('div', 'code', d.bookingCode),
+      copy,
+      el('div', 'tip', 'Save this code. To cancel, use “Manage or cancel a booking” below with this code and your name.')
+    );
+
+    ticket.append(main, stub);
+    box.append(ticket);
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    $('codeIn').value = d.bookingCode;
+    $('nameIn').value = d.customerName;
+  }
+
+  $('closeBtn').onclick = () => { $('booking').classList.add('hidden'); currentShow = null; selected.clear(); };
+
+  $('bookBtn').onclick = async () => {
+    const name = $('name').value.trim();
+    if (!name) { setMsg($('msg'), 'Please enter your name', false); return; }
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ showId: currentShow.id, customerName: name, seats: [...selected] })
+    });
+    const data = await readJson(res);
+    if (res.ok) {
+      selected.clear();
+      showConfirmation(data);
+    } else {
+      setMsg($('msg'), data.message || 'Booking failed', false);
+    }
+    await loadSeats();
+  };
+
+  $('findBtn').onclick = async () => {
+    const code = $('codeIn').value.trim();
+    const name = $('nameIn').value.trim();
+    $('found').classList.add('hidden');
+    foundBooking = null;
+    if (!code || !name) { setMsg($('manageMsg'), 'Please enter both the booking code and your name', false); return; }
+
+    const res = await fetch(`/api/bookings/${encodeURIComponent(code)}?name=${encodeURIComponent(name)}`);
+    const data = await readJson(res);
+    if (!res.ok) { setMsg($('manageMsg'), data.message || 'Could not find the booking', false); return; }
+
+    setMsg($('manageMsg'), '', true);
+    foundBooking = { code: data.bookingCode, name: name };
+    const info = $('foundInfo');
+    info.textContent = '';
+    [
+      ['Booking code', data.bookingCode],
+      ['Movie', data.movieTitle],
+      ['Show', `${data.screenName} · ${fmt(data.showTime)}`],
+      ['Seats', data.seats.join(', ')],
+      ['Total', `Rs.${data.totalAmount}`],
+      ['Name', data.customerName]
+    ].forEach(([label, value]) => {
+      const line = el('div');
+      line.append(el('strong', '', label + ': '), document.createTextNode(value));
+      info.append(line);
+    });
+    $('found').classList.remove('hidden');
+  };
+
+  $('cancelBtn').onclick = async () => {
+    if (!foundBooking) return;
+    if (!confirm(`Cancel booking ${foundBooking.code}? This cannot be undone.`)) return;
+
+    const res = await fetch(`/api/bookings/${encodeURIComponent(foundBooking.code)}?name=${encodeURIComponent(foundBooking.name)}`, { method: 'DELETE' });
+    if (res.status === 204) {
+      setMsg($('manageMsg'), `Booking ${foundBooking.code} has been cancelled. Your seats are available again.`, true);
+      $('found').classList.add('hidden');
+      foundBooking = null;
+      if (currentShow) await loadSeats();
+    } else {
+      const data = await readJson(res);
+      setMsg($('manageMsg'), data.message || 'Could not cancel the booking', false);
+    }
+  };
+
+  loadShows();
+</script>
+</body>
+</html>
