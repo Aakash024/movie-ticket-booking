@@ -11,8 +11,8 @@ A full stack movie ticket booking app with REST APIs and a MySQL database, where
 
 - Browse shows: movies with genre, language, duration, screen, time and price
 - Seat map: a theatre style layout loaded from the database, with available, selected and booked seats shown differently
-- Multi-seat booking with the total price shown before you confirm
-- Double-booking protection: seats are checked inside a transaction, and a database UNIQUE constraint stops two people taking the same seat at the same time
+- Multi seat booking with the total price shown before you confirm
+- Double booking protection: seats are checked inside a transaction, and a database UNIQUE constraint stops two people taking the same seat at the same time
 - Unique booking codes: each booking gets a random code such as `MTB-7K4Q9X`
 - Cancellation by code and name: a booking can only be looked up or cancelled with both its code and the name used to book
 - Cancellation rule: bookings can't be cancelled once the show has started
