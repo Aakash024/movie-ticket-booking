@@ -1,6 +1,6 @@
-# movie-ticket-booking
+# Movie Ticket Booking
 Movie ticket booking app with Spring Boot, MySQL and a web frontend.
-A full-stack movie ticket booking app with REST APIs and a MySQL database, where users pick seats on a live seat map and cancel later with a unique booking code. I built it to learn Spring Boot, especially how to stop two people booking the same seat.
+A full stack movie ticket booking app with REST APIs and a MySQL database, where users pick seats on a live seat map and cancel later with a unique booking code. I built it to learn Spring Boot, especially how to stop two people booking the same seat.
 
 # Screenshots
 <img width="1909" height="928" alt="Movie list" src="https://github.com/user-attachments/assets/3c19bae9-8328-4ae5-8232-9825da2f3b4f" />
@@ -10,7 +10,7 @@ A full-stack movie ticket booking app with REST APIs and a MySQL database, where
 # Features
 
 - Browse shows: movies with genre, language, duration, screen, time and price
-- Seat map: a theatre-style layout loaded from the database, with available, selected and booked seats shown differently
+- Seat map: a theatre style layout loaded from the database, with available, selected and booked seats shown differently
 - Multi-seat booking with the total price shown before you confirm
 - Double-booking protection: seats are checked inside a transaction, and a database UNIQUE constraint stops two people taking the same seat at the same time
 - Unique booking codes: each booking gets a random code such as `MTB-7K4Q9X`
